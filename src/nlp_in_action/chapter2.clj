@@ -1,7 +1,8 @@
 (ns nlp-in-action.chapter2
-  (:require [clojure.string :as str] 
+  (:require [clojure.string :as str]
             [org.apache.clojure-mxnet.ndarray :as nd]
             [opennlp.nlp :as n]
+            [opennlp.tools.train :as t]
             [nlp-in-action.utils :as u]))
 
 
@@ -14,7 +15,6 @@
 
 (defn bag-of-words
   [sentences tokenizer]
-  (println sentences)
   (let [all-words-map (map (comp frequencies u/remove-stop-words tokenizer) sentences)
         distinct-words (reduce (fn [s sentence-map] (into s (keys sentence-map))) 
                                (sorted-set) 
@@ -27,11 +27,20 @@
         (map (fn [word-map] (build-single-row word-map bag-of-word-positions)))
         vec)))
 
+(defn sentiment-analyzer
+  [trainer-doc tokenizer sentence]
+  (let [category-model (t/train-document-categorization trainer-doc)
+        get-category (n/make-document-categorizer category-model)]
+      (-> sentence
+          tokenizer
+          get-category)))
+
 (def sentences
   ["Thomas Jefferson began building Monticello at the age of 26."
     "Construction was done mostly by local masons and carpenters."
     "He moved into the South Pavilion in 1770."
     "Turning Monticello into a neoclassical masterpiece was Jefferson's obsession."])
+
 #_(->> sentences
      (map (comp frequencies #(str/split % #"[-\s.,;!?]+")))
      (reduce (fn [s sentence-map] (into s (keys sentence-map))) (sorted-set)))
@@ -43,3 +52,6 @@
 
 #_ (nd/->vec (nd/dot (bw 0) (nd/transpose (bw 3))))
 #_ (nd/->vec (nd/dot (bw1 0) (nd/transpose (bw1 3))))
+#_ (sentiment-analyzer "train/category.train",
+                       (n/make-tokenizer "models/en-token.bin")
+                       "I am happy today")  

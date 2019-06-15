@@ -1,7 +1,6 @@
 (ns nlp-in-action.utils
   (:import (opennlp.tools.ngram NGramGenerator)
-           (opennlp.tools.stemmer PorterStemmer)
-           (opennlp.)))
+           (opennlp.tools.stemmer PorterStemmer)))
 
 (defn ngram-generator 
   [tokenizer sentence n & {:keys [seperator] :or {seperator " "}}]
